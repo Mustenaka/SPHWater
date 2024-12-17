@@ -1,13 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SPHWater.Phy.Test
 {
-    /// <summary>
-    /// @Test:
-    ///     Single test script
-    /// </summary>
-    public class BasePhyTest : MonoBehaviour
+    public class DensityTest : MonoBehaviour
     {
         public int ParticleCount = 20;
         public float ParticleRadius = 0.1f;
@@ -67,43 +63,7 @@ namespace SPHWater.Phy.Test
 
         private void Update()
         {
-            for (int i = 0; i < ParticleCount; i++)
-            {
-                _velocitys[i] += Gravity * Time.deltaTime;
-                _positions[i] += _velocitys[i] * Time.deltaTime;
-
-                ResolveCollisions(ref _positions[i], ref _velocitys[i]);
-            }
-
             SetInstanceInfo();      // use gpu draw the particles
-        }
-
-        #region SimplePhy
-
-        /// <summary>
-        /// resolver collision: calculate boundary conditions, reflections
-        /// </summary>
-        private void ResolveCollisions(ref Vector3 position,ref Vector3 velocity)
-        {
-            Vector3 halfBoundsSize = BoundsSize / 2 - Vector3.one * ParticleRadius;
-
-            if (Math.Abs(position.x) > halfBoundsSize.x)
-            {
-                position.x = halfBoundsSize.x * Math.Sign(position.x);
-                velocity.x *= -1 * CollisionDamping;
-            }
-
-            if (Math.Abs(position.y) > halfBoundsSize.y)
-            {
-                position.y = halfBoundsSize.y * Math.Sign(position.y);
-                velocity.y *= -1 * CollisionDamping;
-            }
-
-            if (Math.Abs(position.z) > halfBoundsSize.z)
-            {
-                position.z = halfBoundsSize.z * Math.Sign(position.z);
-                velocity.z *= -1 * CollisionDamping;
-            }
         }
 
         private float CalculateDensity(Vector3 samplePoint)
@@ -120,8 +80,6 @@ namespace SPHWater.Phy.Test
 
             return desity;
         }
-
-        #endregion
 
         #region Draw
 

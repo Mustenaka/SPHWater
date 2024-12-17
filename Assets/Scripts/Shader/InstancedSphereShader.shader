@@ -17,7 +17,6 @@ Shader "Custom/InstancedSphereShader"
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
 
-            // 定义每个实例的结构
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -30,28 +29,28 @@ Shader "Custom/InstancedSphereShader"
                 float4 color : COLOR;
             };
 
-            // 参数传递到Shader的数组
-            StructuredBuffer<float4> _Positions : register(t0);  // 位置数组
-            StructuredBuffer<float4> _Colors : register(t1);     // 颜色数组
+            // parma Shader array
+            StructuredBuffer<float4> _Positions : register(t0); 
+            StructuredBuffer<float4> _Colors : register(t1);
 
             float _ParticleRadius;
 
-            // 顶点着色器：将实例位置和颜色传递给片段着色器
+            // Vertex shader: Passes the instance position and color to the fragment shader
             v2f vert(appdata v, uint instanceID : SV_InstanceID)
             {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
 
-                // 从实例数组中读取每个小球的位置信息
-                o.pos.xyz += _Positions[instanceID].xyz;  // 实例的位移
-                o.color = _Colors[instanceID];            // 实例的颜色
+                // Read the position information for each ball from an array of instances
+                o.pos.xyz += _Positions[instanceID].xyz;
+                o.color = _Colors[instanceID];
 
                 return o;
             }
 
             half4 frag(v2f i) : SV_Target
             {
-                return i.color;  // 返回每个小球的颜色
+                return i.color;  // return the color of the particle
             }
 
             ENDCG
