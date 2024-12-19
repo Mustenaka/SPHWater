@@ -45,8 +45,7 @@ namespace SPHWater.Phy.Test
                 // 设置粒子颜色
                 _instanceColors[i] = Color.blue;
             }
-
-
+            
             // bind Material init
             InstancedMaterial.SetMatrixArray("_Positions", _instanceTransforms);
             InstancedMaterial.SetColorArray("_Colors", _instanceColors);
@@ -63,7 +62,7 @@ namespace SPHWater.Phy.Test
                 ResolveCollisions(ref _positions[i], ref _velocities[i]);
             }
 
-            SetInstanceInfo();      // use gpu draw the particles
+            SetInstanceInfo();      // use gpu draw the particles : No use
         }
 
         /// <summary>
@@ -84,21 +83,6 @@ namespace SPHWater.Phy.Test
                 position.y = halfBoundsSize.y * Math.Sign(position.y);
                 velocity.y *= -1 * CollisionDamping;
             }
-        }
-
-        private float CalculateDensity(Vector2 samplePoint)
-        {
-            float desity = 0;
-            const float mass = 1;
-
-            foreach (var position in _positions)
-            {
-                float dst = (position - samplePoint).magnitude;
-                float influence = PMath.SmoothingKernel(ParticleRadius, dst);
-                desity += influence * mass;
-            }
-
-            return desity;
         }
 
         #region Draw

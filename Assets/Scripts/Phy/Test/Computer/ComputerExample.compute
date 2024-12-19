@@ -1,0 +1,33 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<float> bufferData;
+
+int operationMode = 0;
+
+float MultiplyByTwo(float value)
+{
+    return value * 2.0;
+}
+
+float MultiplyByThree(float value)
+{
+    return value * 3.0;
+}
+
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    float value = id.x;
+    switch (operationMode)
+    {
+        case 0:
+            bufferData[id.x] = MultiplyByThree(value);
+            break;
+        case 1:
+            bufferData[id.x] = MultiplyByTwo(value);
+            break;
+    	default:
+            bufferData[id.x] = value;
+            break;
+    }
+}
