@@ -1,72 +1,92 @@
-﻿using UnityEngine;
-using UnityEngine.UIElements;
+﻿using System;
+using UnityEngine;
 
 namespace SPHWater.Phy.Test
 {
+    /// <summary>
+    /// 2D Draw
+    /// </summary>
     public class DensityTest : MonoBehaviour
     {
         public int ParticleCount = 20;
         public float ParticleRadius = 0.1f;
         [Range(0.0f, 1.0f)] public float CollisionDamping = 0.5f;
 
-        public Vector3 Gravity = Vector3.down * 0.981f;
-        public Vector3 BoundsSize;
+        public Vector2 Gravity = Vector2.down * 0.981f;
+        public Vector2 BoundsSize;
 
-        public Material instancedMaterial;  // GPU INSTANCE MATERIAL
+        public Material InstancedMaterial;  // GPU INSTANCE MATERIAL
 
-        private Vector3[] _velocitys;
-        private Vector3[] _positions;
+        private Vector2[] _velocities;
+        private Vector2[] _positions;
 
         private Matrix4x4[] _instanceTransforms;
         private Color[] _instanceColors;
 
         private void Start()
         {
-            _velocitys = new Vector3[ParticleCount];
-            _positions = new Vector3[ParticleCount];
+            _velocities = new Vector2[ParticleCount];
+            _positions = new Vector2[ParticleCount];
             _instanceTransforms = new Matrix4x4[ParticleCount];
             _instanceColors = new Color[ParticleCount];
 
             // Fill data
-            var particlesPerLayer = Mathf.CeilToInt(Mathf.Pow(ParticleCount, 1f / 3f));
-            var index = 0;
-
-            for (var z = 0; z < particlesPerLayer && index < ParticleCount; z++)
+            var particlePerRow = (int)Math.Sqrt(ParticleCount);
+            var particlePerCol = (ParticleCount - 1) / particlePerRow + 1;
+            for (int i = 0; i < ParticleCount; i++)
             {
-                for (var y = 0; y < particlesPerLayer && index < ParticleCount; y++)
-                {
-                    for (var x = 0; x < particlesPerLayer && index < ParticleCount; x++)
-                    {
-                        // 计算每个粒子的位置
-                        _positions[index] = new Vector3(
-                            x * ParticleRadius * 2,   // X轴的间距
-                            y * ParticleRadius * 2,   // Y轴的间距
-                            z * ParticleRadius * 2    // Z轴的间距
-                        );
+                var x = (i % particlePerRow - particlePerRow / 2f + 0.5f) * ParticleRadius * 2;
+                var y = (i / particlePerRow - particlePerCol / 2f + 0.5f) * ParticleRadius * 2;
 
-                        // 将每个粒子的位置进行变换矩阵计算
-                        _instanceTransforms[index] = Matrix4x4.TRS(_positions[index], Quaternion.identity, Vector3.one * ParticleRadius * 2);
+                _positions[i] = new Vector2(x, y);
 
-                        // 设置粒子颜色
-                        _instanceColors[index] = Color.blue;
-
-                        index++;
-                    }
-                }
+                // 将每个粒子的位置进行变换矩阵计算
+                _instanceTransforms[i] = Matrix4x4.TRS(_positions[i], Quaternion.identity, Vector3.one * ParticleRadius * 2);
+                // 设置粒子颜色
+                _instanceColors[i] = Color.blue;
             }
 
+
             // bind Material init
-            instancedMaterial.SetMatrixArray("_Positions", _instanceTransforms);
-            instancedMaterial.SetColorArray("_Colors", _instanceColors);
-            instancedMaterial.SetFloat("_ParticleRadius", ParticleRadius);
+            InstancedMaterial.SetMatrixArray("_Positions", _instanceTransforms);
+            InstancedMaterial.SetColorArray("_Colors", _instanceColors);
+            InstancedMaterial.SetFloat("_ParticleRadius", ParticleRadius);
         }
 
         private void Update()
         {
+            for (int i = 0; i < ParticleCount; i++)
+            {
+                _velocities[i] += Gravity * Time.deltaTime;
+                _positions[i] += _velocities[i] * Time.deltaTime;
+
+                ResolveCollisions(ref _positions[i], ref _velocities[i]);
+            }
+
             SetInstanceInfo();      // use gpu draw the particles
         }
 
-        private float CalculateDensity(Vector3 samplePoint)
+        /// <summary>
+        /// resolver collision: calculate boundary conditions, reflections
+        /// </summary>
+        private void ResolveCollisions(ref Vector2 position, ref Vector2 velocity)
+        {
+            Vector2 halfBoundsSize = BoundsSize / 2 - Vector2.one * ParticleRadius;
+
+            if (Math.Abs(position.x) > halfBoundsSize.x)
+            {
+                position.x = halfBoundsSize.x * Math.Sign(position.x);
+                velocity.x *= -1 * CollisionDamping;
+            }
+
+            if (Math.Abs(position.y) > halfBoundsSize.y)
+            {
+                position.y = halfBoundsSize.y * Math.Sign(position.y);
+                velocity.y *= -1 * CollisionDamping;
+            }
+        }
+
+        private float CalculateDensity(Vector2 samplePoint)
         {
             float desity = 0;
             const float mass = 1;
@@ -88,14 +108,14 @@ namespace SPHWater.Phy.Test
         /// </summary>
         private void SetInstanceInfo()
         {
-            if (instancedMaterial == null)
+            if (InstancedMaterial == null)
             {
                 Debug.LogError("missing instance materials");
                 return;
             }
 
-            instancedMaterial.SetMatrixArray("_Positions", _instanceTransforms);
-            instancedMaterial.SetColorArray("_Colors", _instanceColors);
+            InstancedMaterial.SetMatrixArray("_Positions", _instanceTransforms);
+            InstancedMaterial.SetColorArray("_Colors", _instanceColors);
         }
 
         private void OnDrawGizmos()

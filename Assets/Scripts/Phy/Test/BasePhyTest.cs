@@ -18,7 +18,7 @@ namespace SPHWater.Phy.Test
 
         public Material instancedMaterial;  // GPU INSTANCE MATERIAL
 
-        private Vector3[] _velocitys;
+        private Vector3[] _velocities;
         private Vector3[] _positions;
 
         private Matrix4x4[] _instanceTransforms;
@@ -26,7 +26,7 @@ namespace SPHWater.Phy.Test
 
         private void Start()
         {
-            _velocitys = new Vector3[ParticleCount];
+            _velocities = new Vector3[ParticleCount];
             _positions = new Vector3[ParticleCount];
             _instanceTransforms = new Matrix4x4[ParticleCount];
             _instanceColors = new Color[ParticleCount];
@@ -69,10 +69,10 @@ namespace SPHWater.Phy.Test
         {
             for (int i = 0; i < ParticleCount; i++)
             {
-                _velocitys[i] += Gravity * Time.deltaTime;
-                _positions[i] += _velocitys[i] * Time.deltaTime;
+                _velocities[i] += Gravity * Time.deltaTime;
+                _positions[i] += _velocities[i] * Time.deltaTime;
 
-                ResolveCollisions(ref _positions[i], ref _velocitys[i]);
+                ResolveCollisions(ref _positions[i], ref _velocities[i]);
             }
 
             SetInstanceInfo();      // use gpu draw the particles
