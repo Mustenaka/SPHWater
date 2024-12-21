@@ -211,6 +211,60 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1419152186
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1419152188}
+  - component: {fileID: 1419152187}
+  m_Layer: 0
+  m_Name: 2DTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1419152187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419152186}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44efc0e67117c334d96527bb41976ff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  numParticles: 100
+  gravity: -9.81
+  smoothingRadius: 0.1
+  targetDensity: 30
+  pressureMultiplier: 100
+  viscosityStrength: 0.06
+  boundsSize: {x: 15, y: 8}
+  obstacleSize: {x: 1, y: 1}
+  obstacleCentre: {x: 0, y: 0}
+  deltaTime: 0.02
+--- !u!4 &1419152188
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419152186}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.660752, y: -1.5815918, z: -10.438002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1766712417
 GameObject:
   m_ObjectHideFlags: 0
@@ -228,7 +282,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1766712418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,10 +295,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478b9524e87bcc045b6254fe776d940f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  particleCount: 40
-  spawnSize: {x: 3, y: 3}
+  particleCount: 50
+  spawnSize: {x: 2, y: 2}
   spawnCenter: {x: 0, y: 0}
-  spawnVelocity: {x: 0, y: -0.1}
+  spawnVelocity: {x: 0, y: -9.81}
   jitterStr: 0.1
   showSpawnBoundsGizmos: 1
 --- !u!114 &1766712419
@@ -262,13 +316,12 @@ MonoBehaviour:
   dt: 0.002
   gravity: {x: 0, y: -9.81}
   particleCount: 0
-  particleRadius: 0.2
+  particleRadius: 0.1
   particleMass: 0.02
   smoothingLength: 0.1
   restDensity: 1000
-  stiffness: 3
+  stiffness: 100
   viscosity: 0.1
-  deltaTime: 0.01
   boundsSize: {x: 8, y: 5}
   collisionDamping: 0.357
   particleSpawner: {fileID: 1766712418}
@@ -416,3 +469,4 @@ SceneRoots:
   - {fileID: 743503278}
   - {fileID: 1784458997}
   - {fileID: 1766712420}
+  - {fileID: 1419152188}
