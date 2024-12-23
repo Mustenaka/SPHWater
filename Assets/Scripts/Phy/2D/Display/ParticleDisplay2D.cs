@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using static UnityEngine.InputSystem.HID.HID;
 
 namespace SPHWater.Assets.Scripts.Phy._2D.Display
 {
