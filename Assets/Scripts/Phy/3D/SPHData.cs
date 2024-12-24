@@ -43,6 +43,11 @@ namespace Assets.Scripts
         /// 碰撞阻尼
         /// </summary>
         public float CollisionDamping { get; set; }
+
+        /// <summary>
+        /// 平滑半径
+        /// </summary>
+        public float SmoothingRadius { get; set; }
     }
 
     public class SPHReferenceData
@@ -71,5 +76,10 @@ namespace Assets.Scripts
         /// 碰撞阻尼
         /// </summary>
         public float CollisionDamping { get; set; }
+
+        /// <summary>
+        /// 平滑半径
+        /// </summary>
+        public float SmoothingRadius { get; set; }
     }
 }

@@ -14,7 +14,8 @@ public class SPHSolver : MonoBehaviour
     public float particleRadius;    // 粒子半径
     public Vector3 gravity;         // 重力
     public Vector3[] positions;     // 位置
-    public Vector3[] velocitys;     // 速度
+    public Vector3[] velocities;     // 速度
+    public float smoothingRadius;   // 平滑半径
 
     [Header("Bound")] 
     [Range(0, 1.0f)] public float collisionDamping;   // 碰撞阻尼
@@ -35,7 +36,7 @@ public class SPHSolver : MonoBehaviour
         initData.CollisionDamping = collisionDamping;
 
         positions = new Vector3[particleCount];
-        velocitys = new Vector3[particleCount];
+        velocities = new Vector3[particleCount];
 
         // Fill data
         var particlesPerLayer = Mathf.CeilToInt(Mathf.Pow(particleCount, 1f / 3f));
@@ -59,7 +60,7 @@ public class SPHSolver : MonoBehaviour
         }
 
         initData.Positions = positions;
-        initData.Velocitys = velocitys;
+        initData.Velocitys = velocities;
 
         simulate = new SPHSimulate(initData);
     }
@@ -101,6 +102,7 @@ public class SPHSolver : MonoBehaviour
         referenceData.BoundSize = BoundSize;
         referenceData.Radius = particleRadius;
         referenceData.CollisionDamping = collisionDamping;
+        referenceData.SmoothingRadius = smoothingRadius;
     }
 
     private void OnDrawGizmos()

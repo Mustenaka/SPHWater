@@ -23,9 +23,10 @@ public class SPHSimulate
     public NativeArray<float3> _externalForce;  // 额外力（一般是重力） F_total = f_external + f_pressure + f_viscosity
     public NativeArray<float3> _pressureForce;  // 压力
     public NativeArray<float3> _viscosityForce; // 粘度力
-    public NativeArray<float> _density;         // 密度
+    public NativeArray<float2> _density;         // 密度
     public NativeReference<float> _raduis;      // 粒子半径
 
+    public NativeReference<float> _smoothingRadius; // 平滑半径
     public NativeReference<float3> _gravity;        // 重力
     public NativeReference<float3> _boundCenter;    // 包围盒中心
     public NativeReference<float3> _boundSize;      // 包围盒尺寸
@@ -39,13 +40,14 @@ public class SPHSimulate
         _externalForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _pressureForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _viscosityForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
-        _density = new NativeArray<float>(initData.ParticleCount, Allocator.Persistent);
+        _density = new NativeArray<float2>(initData.ParticleCount, Allocator.Persistent);
         _raduis = new NativeReference<float>(initData.Radius, Allocator.Persistent);
 
         _positions.CopyFrom(Array.ConvertAll(initData.Positions, v => (float3)v));
         _velocitys.CopyFrom(Array.ConvertAll(initData.Velocitys, v => (float3)v));
 
         /* 环境参数 */
+        _smoothingRadius = new NativeReference<float>(initData.SmoothingRadius, Allocator.Persistent);
         _gravity = new NativeReference<float3>(initData.Gravity, Allocator.Persistent);
         _boundCenter = new NativeReference<float3>(initData.BoundCenter, Allocator.Persistent);
         _boundSize = new NativeReference<float3>(initData.BoundSize, Allocator.Persistent);
@@ -54,6 +56,7 @@ public class SPHSimulate
 
     public void Dispose()
     {
+        /* 粒子计算参数 */
         _positions.Dispose();
         _velocitys.Dispose();
         _externalForce.Dispose();
@@ -62,6 +65,8 @@ public class SPHSimulate
         _density.Dispose();
         _raduis.Dispose();
 
+        /* 环境参数 */
+        _smoothingRadius.Dispose();
         _gravity.Dispose();
         _boundCenter.Dispose();
         _boundSize.Dispose();
@@ -79,6 +84,7 @@ public class SPHSimulate
         _boundSize.Value = reference.BoundSize;
         _raduis.Value = reference.Radius;
         _collisionDamping.Value = reference.CollisionDamping;
+        _smoothingRadius.Value = reference.SmoothingRadius;
     }
 
     /// <summary>
