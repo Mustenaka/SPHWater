@@ -133,8 +133,9 @@ public class SPHSimulate
     {
         JobHandle handle = new();
 
-        handle = DoExternalForce(handle);
+        handle = DoExternalForce(dt, handle);
         handle = DoCalcDensities(handle);
+        handle = DoUpdatePosition(dt, handle);
         //handle = DoVelocitySolution(dt, handle);  // 不用这个了
         handle = DoBoundJob(handle);
 
@@ -148,12 +149,18 @@ public class SPHSimulate
     /// </summary>
     /// <param name="depend"></param>
     /// <returns></returns>
-    private JobHandle DoExternalForce(JobHandle depend)
+    private JobHandle DoExternalForce(float dt, JobHandle depend)
     {
         var job = new ExternalForce()
         {
+            positions = _positions,
+            velocities = _velocitys,
+            nextPositions = _nextPosition,
+
             externalForce = _externalForce,
             gravity = _gravity,
+
+            dt = dt,
         };
 
         return job.Schedule(ParticleCount, 64, depend);
@@ -183,13 +190,13 @@ public class SPHSimulate
     /// <param name="dt"></param>
     /// <param name="depend"></param>
     /// <returns></returns>
-    private JobHandle DoVelocitySolution(float dt,JobHandle depend)
+    private JobHandle DoVelocitySolution(float dt, JobHandle depend)
     {
         var job = new VelocitySolutionJob()
         {
             positions = _positions,
             velocities = _velocitys,
-            
+
             externalForce = _externalForce,
             pressureForce = _pressureForce,
             viscosityForce = _viscosityForce,
@@ -197,7 +204,20 @@ public class SPHSimulate
             dt = dt,
         };
 
-        return job.Schedule(ParticleCount,64, depend);
+        return job.Schedule(ParticleCount, 64, depend);
+    }
+
+    private JobHandle DoUpdatePosition(float dt, JobHandle depend)
+    {
+        var job = new UpdatePosition()
+        {
+            position = _positions,
+            velocities = _velocitys,
+
+            dt = dt,
+        };
+
+        return job.Schedule(ParticleCount, 64, depend);
     }
 
     /// <summary>

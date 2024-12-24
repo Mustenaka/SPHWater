@@ -16,7 +16,7 @@ namespace Assets.Scripts.Jobs
         [NativeDisableUnsafePtrRestriction] public NativeArray<float3> velocities;
         [NativeDisableUnsafePtrRestriction] public NativeArray<float3> nextPositions;
 
-        [WriteOnly] public NativeArray<float3> externalForce;
+        [NativeDisableUnsafePtrRestriction] public NativeArray<float3> externalForce;
         [ReadOnly] public NativeReference<float3> gravity;
 
         [ReadOnly] public float dt;
