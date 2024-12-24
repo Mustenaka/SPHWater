@@ -61,5 +61,11 @@ sysinfo.txt
 # IDE project
 *.vscode/
 .vscode/*
+*.vs/
+.vs/*
 *.idea/
 .idea/*
+
+# User Setting
+UserSettings/*
+/UserSettings/Layouts/default-6000.dwlt
