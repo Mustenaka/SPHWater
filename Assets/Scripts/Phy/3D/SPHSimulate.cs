@@ -135,7 +135,7 @@ public class SPHSimulate
 
         handle = DoExternalForce(handle);
         handle = DoCalcDensities(handle);
-        handle = DoVelocitySolution(dt, handle);
+        //handle = DoVelocitySolution(dt, handle);  // 不用这个了
         handle = DoBoundJob(handle);
 
         handle.Complete();
