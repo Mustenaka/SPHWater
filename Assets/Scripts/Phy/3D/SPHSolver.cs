@@ -11,11 +11,16 @@ public class SPHSolver : MonoBehaviour
 
     [Header("Particles Param")]
     public int particleCount;       // 粒子数量
-    public float particleRadius;    // 粒子半径
     public Vector3 gravity;         // 重力
     public Vector3[] positions;     // 位置
     public Vector3[] velocities;     // 速度
-    public float smoothingRadius;   // 平滑半径
+
+    public float particleRadius;        // 粒子半径
+    public float targetDensity;         // 目标密度
+    public float pressureMultiplier;    // 压力系数
+    public float nearPressureMultiplier;// 邻近压力系数
+    public float viscosityStrength;     // 粘性强度
+    public float smoothingRadius;       // 平滑半径
 
     [Header("Bound")] 
     [Range(0, 1.0f)] public float collisionDamping;   // 碰撞阻尼
@@ -33,6 +38,10 @@ public class SPHSolver : MonoBehaviour
         initData.BoundCenter = BoundCenter;
         initData.BoundSize = BoundSize;
         initData.Radius = particleRadius;
+        initData.TargetDensity = targetDensity;
+        initData.PressureMultiplier = pressureMultiplier;
+        initData.NearPressureMultiplier = nearPressureMultiplier;
+        initData.ViscosityStrength = viscosityStrength;
         initData.CollisionDamping = collisionDamping;
 
         positions = new Vector3[particleCount];
@@ -94,14 +103,21 @@ public class SPHSolver : MonoBehaviour
         simulate.Dispose();
     }
 
+    /// <summary>
+    /// 打包传递参数
+    /// </summary>
     private void PackageReferenceData()
     {
         referenceData ??= new SPHReferenceData();
         referenceData.Gravity = gravity;
         referenceData.BoundCenter  = BoundCenter;
         referenceData.BoundSize = BoundSize;
-        referenceData.Radius = particleRadius;
         referenceData.CollisionDamping = collisionDamping;
+        referenceData.Radius = particleRadius;
+        referenceData.TargetDensity = targetDensity;
+        referenceData.PressureMultiplier = pressureMultiplier;
+        referenceData.NearPressureMultiplier = nearPressureMultiplier;
+        referenceData.ViscosityStrength = viscosityStrength;
         referenceData.SmoothingRadius = smoothingRadius;
     }
 

@@ -19,39 +19,62 @@ public class SPHSimulate
 {
     public int ParticleCount => _positions.Length;  // 粒子数量
     public NativeArray<float3> _positions;      // 粒子位置
+    public NativeArray<float3> _nextPosition;   // 粒子位置（下一帧）
     public NativeArray<float3> _velocitys;      // 粒子速度
     public NativeArray<float3> _externalForce;  // 额外力（一般是重力） F_total = f_external + f_pressure + f_viscosity
     public NativeArray<float3> _pressureForce;  // 压力
     public NativeArray<float3> _viscosityForce; // 粘度力
-    public NativeArray<float2> _density;         // 密度
-    public NativeReference<float> _raduis;      // 粒子半径
+    public NativeArray<float2> _density;        // 密度
 
+    public NativeReference<float> _radius;      // 粒子半径
+    public NativeReference<float> _targetDensity;           // 目标密度
+    public NativeReference<float> _pressureMultiplier;      // 压力系数
+    public NativeReference<float> _nearPressureMultiplier;  // 邻近压力系数
+    public NativeReference<float> _viscosityStrength;       // 粘度强度
     public NativeReference<float> _smoothingRadius; // 平滑半径
+
     public NativeReference<float3> _gravity;        // 重力
     public NativeReference<float3> _boundCenter;    // 包围盒中心
     public NativeReference<float3> _boundSize;      // 包围盒尺寸
     public NativeReference<float> _collisionDamping;// 碰撞阻尼
+
+    public const uint hashK1 = 15823;
+    public const uint hashK2 = 9737333;
+    public const uint hashK3 = 440817757;
+    public NativeArray<uint3> SpatialIndices;
+    public NativeArray<uint3> SpatialOffsets;
 
     public SPHSimulate(SPHInitData initData)
     {
         /* 粒子计算参数 */
         _positions = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _velocitys = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
+        _nextPosition = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _externalForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _pressureForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _viscosityForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _density = new NativeArray<float2>(initData.ParticleCount, Allocator.Persistent);
-        _raduis = new NativeReference<float>(initData.Radius, Allocator.Persistent);
 
         _positions.CopyFrom(Array.ConvertAll(initData.Positions, v => (float3)v));
         _velocitys.CopyFrom(Array.ConvertAll(initData.Velocitys, v => (float3)v));
 
         /* 环境参数 */
+        _radius = new NativeReference<float>(initData.Radius, Allocator.Persistent);
+        _targetDensity = new NativeReference<float>(initData.TargetDensity, Allocator.Persistent);
+        _pressureMultiplier = new NativeReference<float>(initData.PressureMultiplier, Allocator.Persistent);
+        _nearPressureMultiplier = new NativeReference<float>(initData.NearPressureMultiplier, Allocator.Persistent);
+        _viscosityStrength = new NativeReference<float>(initData.ViscosityStrength, Allocator.Persistent);
         _smoothingRadius = new NativeReference<float>(initData.SmoothingRadius, Allocator.Persistent);
+
+        /* 外包围盒参数 */
         _gravity = new NativeReference<float3>(initData.Gravity, Allocator.Persistent);
         _boundCenter = new NativeReference<float3>(initData.BoundCenter, Allocator.Persistent);
         _boundSize = new NativeReference<float3>(initData.BoundSize, Allocator.Persistent);
         _collisionDamping = new NativeReference<float>(initData.CollisionDamping, Allocator.Persistent);
+
+        /* HashTable 优化*/
+        SpatialIndices = new NativeArray<uint3>(initData.ParticleCount, Allocator.Persistent);
+        SpatialOffsets = new NativeArray<uint3>(initData.ParticleCount, Allocator.Persistent);
     }
 
     public void Dispose()
@@ -59,18 +82,29 @@ public class SPHSimulate
         /* 粒子计算参数 */
         _positions.Dispose();
         _velocitys.Dispose();
+        _nextPosition.Dispose();
         _externalForce.Dispose();
         _pressureForce.Dispose();
         _viscosityForce.Dispose();
         _density.Dispose();
-        _raduis.Dispose();
 
         /* 环境参数 */
+        _radius.Dispose();
+        _targetDensity.Dispose();
+        _pressureMultiplier.Dispose();
+        _nearPressureMultiplier.Dispose();
+        _viscosityStrength.Dispose();
         _smoothingRadius.Dispose();
+
+        /* 外包围盒参数 */
         _gravity.Dispose();
         _boundCenter.Dispose();
         _boundSize.Dispose();
         _collisionDamping.Dispose();
+
+        /* HashTable 优化*/
+        SpatialIndices.Dispose();
+        SpatialOffsets.Dispose();
     }
 
     /// <summary>
@@ -82,8 +116,13 @@ public class SPHSimulate
         _gravity.Value = reference.Gravity;
         _boundCenter.Value = reference.BoundCenter;
         _boundSize.Value = reference.BoundSize;
-        _raduis.Value = reference.Radius;
         _collisionDamping.Value = reference.CollisionDamping;
+
+        _radius.Value = reference.Radius;
+        _targetDensity.Value = reference.TargetDensity;
+        _pressureMultiplier.Value = reference.PressureMultiplier;
+        _nearPressureMultiplier.Value = reference.NearPressureMultiplier;
+        _viscosityStrength.Value = reference.ViscosityStrength;
         _smoothingRadius.Value = reference.SmoothingRadius;
     }
 
@@ -95,6 +134,7 @@ public class SPHSimulate
         JobHandle handle = new();
 
         handle = DoExternalForce(handle);
+        handle = DoCalcDensities(handle);
         handle = DoVelocitySolution(dt, handle);
         handle = DoBoundJob(handle);
 
@@ -120,6 +160,24 @@ public class SPHSimulate
     }
 
     /// <summary>
+    /// 计算密度
+    /// </summary>
+    /// <param name="depend"></param>
+    /// <returns></returns>
+    private JobHandle DoCalcDensities(JobHandle depend)
+    {
+        var job = new CalculateDensities()
+        {
+            positions = _nextPosition,
+            densities = _density,
+
+            smoothingRadius = _smoothingRadius,
+        };
+
+        return job.Schedule(ParticleCount, 64, depend);
+    }
+
+    /// <summary>
     /// 牛顿法通过速度得到位置更新
     /// </summary>
     /// <param name="dt"></param>
@@ -130,7 +188,7 @@ public class SPHSimulate
         var job = new VelocitySolutionJob()
         {
             positions = _positions,
-            velocitys = _velocitys,
+            velocities = _velocitys,
             
             externalForce = _externalForce,
             pressureForce = _pressureForce,
@@ -153,7 +211,7 @@ public class SPHSimulate
         {
             positions = _positions,
             velocitys = _velocitys,
-            particleRadius = _raduis,
+            particleRadius = _radius,
 
             boundCenter = _boundCenter,
             boundSize = _boundSize,

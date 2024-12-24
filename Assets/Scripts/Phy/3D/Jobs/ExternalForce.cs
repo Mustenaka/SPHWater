@@ -12,6 +12,7 @@ namespace Assets.Scripts.Jobs
     public struct ExternalForce : IJobParallelFor
     {
         [WriteOnly] public NativeArray<float3> externalForce;
+
         [ReadOnly] public NativeReference<float3> gravity;
 
         public void Execute(int index)

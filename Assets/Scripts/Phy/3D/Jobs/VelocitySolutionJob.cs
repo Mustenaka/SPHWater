@@ -14,7 +14,7 @@ namespace Assets.Scripts.Jobs
     public struct VelocitySolutionJob : IJobParallelFor
     {
         [NativeDisableUnsafePtrRestriction] public NativeArray<float3> positions;
-        [NativeDisableUnsafePtrRestriction] public NativeArray<float3> velocitys;
+        [NativeDisableUnsafePtrRestriction] public NativeArray<float3> velocities;
 
         [NativeDisableUnsafePtrRestriction] public NativeArray<float3> externalForce;
         [NativeDisableUnsafePtrRestriction] public NativeArray<float3> pressureForce;
@@ -26,8 +26,8 @@ namespace Assets.Scripts.Jobs
         {
             var totalForce = externalForce[index] + pressureForce[index] + viscosityForce[index];
 
-            velocitys[index] += (totalForce * dt);
-            positions[index] += (velocitys[index] * dt);
+            velocities[index] += (totalForce * dt);
+            positions[index] += (velocities[index] * dt);
         }
     }
 }

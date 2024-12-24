@@ -271,12 +271,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dt: 0.002
   accTime: 0
-  particleCount: 1024
-  particleRadius: 0.1
+  particleCount: 128
   gravity: {x: 0, y: -9.81, z: 0}
   positions: []
-  velocitys: []
-  collisionDamping: 0.5
+  velocities: []
+  particleRadius: 0.1
+  targetDensity: 630
+  pressureMultiplier: 260
+  nearPressureMultiplier: 2.25
+  viscosityStrength: 0.001
+  smoothingRadius: 0.2
+  collisionDamping: 0.8
   BoundCenter: {x: 0, y: 0, z: 0}
   BoundSize: {x: 5, y: 5, z: 5}
   isRenderBound: 1

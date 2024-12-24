@@ -2,6 +2,9 @@
 
 namespace Assets.Scripts
 {
+    /// <summary>
+    /// 构造时参数
+    /// </summary>
     public class SPHInitData
     {
         /// <summary>
@@ -35,14 +38,34 @@ namespace Assets.Scripts
         public Vector3 BoundSize { get; set; }
 
         /// <summary>
+        /// 碰撞阻尼
+        /// </summary>
+        public float CollisionDamping { get; set; }
+
+        /// <summary>
         /// 粒子半径
         /// </summary>
         public float Radius { get; set; }
 
         /// <summary>
-        /// 碰撞阻尼
+        /// 目标密度
         /// </summary>
-        public float CollisionDamping { get; set; }
+        public float TargetDensity { get; set; }
+
+        /// <summary>
+        /// 压力系数
+        /// </summary>
+        public float PressureMultiplier { get; set; }
+
+        /// <summary>
+        /// 邻近压力系数
+        /// </summary>
+        public float NearPressureMultiplier { get; set; }
+
+        /// <summary>
+        /// 粘度强度
+        /// </summary>
+        public float ViscosityStrength { get; set; }
 
         /// <summary>
         /// 平滑半径
@@ -50,6 +73,9 @@ namespace Assets.Scripts
         public float SmoothingRadius { get; set; }
     }
 
+    /// <summary>
+    /// 每次物理解算时进行的传递参数
+    /// </summary>
     public class SPHReferenceData
     {
         /// <summary>
@@ -68,14 +94,34 @@ namespace Assets.Scripts
         public Vector3 BoundSize { get; set; }
 
         /// <summary>
+        /// 碰撞阻尼
+        /// </summary>
+        public float CollisionDamping { get; set; }
+
+        /// <summary>
         /// 粒子半径
         /// </summary>
         public float Radius { get; set; }
 
         /// <summary>
-        /// 碰撞阻尼
+        /// 目标密度
         /// </summary>
-        public float CollisionDamping { get; set; }
+        public float TargetDensity { get; set; }
+
+        /// <summary>
+        /// 压力系数
+        /// </summary>
+        public float PressureMultiplier { get; set; }
+
+        /// <summary>
+        /// 邻近压力系数
+        /// </summary>
+        public float NearPressureMultiplier { get; set; }
+
+        /// <summary>
+        /// 粘度强度
+        /// </summary>
+        public float ViscosityStrength { get; set; }
 
         /// <summary>
         /// 平滑半径

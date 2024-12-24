@@ -114,7 +114,7 @@ namespace SPHWater.Phy.Test
             foreach (var position in _positions)
             {
                 float dst = (position - samplePoint).magnitude;
-                float influence = PMath.SmoothingKernel(ParticleRadius, dst);
+                float influence = PMath.SmoothingKernelPoly6(dst, ParticleRadius);
                 desity += influence * mass;
             }
 
