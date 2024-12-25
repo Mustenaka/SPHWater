@@ -20,11 +20,11 @@ public class SPHSimulate
     public int ParticleCount => _positions.Length;  // 粒子数量
     public NativeArray<float3> _positions;      // 粒子位置
     public NativeArray<float3> _nextPosition;   // 粒子位置（下一帧）
-    public NativeArray<float3> _velocitys;      // 粒子速度
+    public NativeArray<float3> _velocities;     // 粒子速度
     public NativeArray<float3> _externalForce;  // 额外力（一般是重力） F_total = f_external + f_pressure + f_viscosity
     public NativeArray<float3> _pressureForce;  // 压力
     public NativeArray<float3> _viscosityForce; // 粘度力
-    public NativeArray<float2> _density;        // 密度
+    public NativeArray<float2> _densities;      // 密度
 
     public NativeReference<float> _radius;      // 粒子半径
     public NativeReference<float> _targetDensity;           // 目标密度
@@ -38,6 +38,7 @@ public class SPHSimulate
     public NativeReference<float3> _boundSize;      // 包围盒尺寸
     public NativeReference<float> _collisionDamping;// 碰撞阻尼
 
+    public const int threadCount = 128;
     public const uint hashK1 = 15823;
     public const uint hashK2 = 9737333;
     public const uint hashK3 = 440817757;
@@ -48,15 +49,15 @@ public class SPHSimulate
     {
         /* 粒子计算参数 */
         _positions = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
-        _velocitys = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
+        _velocities = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _nextPosition = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _externalForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _pressureForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
         _viscosityForce = new NativeArray<float3>(initData.ParticleCount, Allocator.Persistent);
-        _density = new NativeArray<float2>(initData.ParticleCount, Allocator.Persistent);
+        _densities = new NativeArray<float2>(initData.ParticleCount, Allocator.Persistent);
 
         _positions.CopyFrom(Array.ConvertAll(initData.Positions, v => (float3)v));
-        _velocitys.CopyFrom(Array.ConvertAll(initData.Velocitys, v => (float3)v));
+        _velocities.CopyFrom(Array.ConvertAll(initData.Velocitys, v => (float3)v));
 
         /* 环境参数 */
         _radius = new NativeReference<float>(initData.Radius, Allocator.Persistent);
@@ -81,12 +82,12 @@ public class SPHSimulate
     {
         /* 粒子计算参数 */
         _positions.Dispose();
-        _velocitys.Dispose();
+        _velocities.Dispose();
         _nextPosition.Dispose();
         _externalForce.Dispose();
         _pressureForce.Dispose();
         _viscosityForce.Dispose();
-        _density.Dispose();
+        _densities.Dispose();
 
         /* 环境参数 */
         _radius.Dispose();
@@ -154,7 +155,7 @@ public class SPHSimulate
         var job = new ExternalForce()
         {
             positions = _positions,
-            velocities = _velocitys,
+            velocities = _velocities,
             nextPositions = _nextPosition,
 
             externalForce = _externalForce,
@@ -163,7 +164,7 @@ public class SPHSimulate
             dt = dt,
         };
 
-        return job.Schedule(ParticleCount, 64, depend);
+        return job.Schedule(ParticleCount, threadCount, depend);
     }
 
     /// <summary>
@@ -176,12 +177,12 @@ public class SPHSimulate
         var job = new CalculateDensities()
         {
             positions = _nextPosition,
-            densities = _density,
+            densities = _densities,
 
             smoothingRadius = _smoothingRadius,
         };
 
-        return job.Schedule(ParticleCount, 64, depend);
+        return job.Schedule(ParticleCount, threadCount, depend);
     }
 
     /// <summary>
@@ -195,7 +196,7 @@ public class SPHSimulate
         var job = new VelocitySolutionJob()
         {
             positions = _positions,
-            velocities = _velocitys,
+            velocities = _velocities,
 
             externalForce = _externalForce,
             pressureForce = _pressureForce,
@@ -204,20 +205,26 @@ public class SPHSimulate
             dt = dt,
         };
 
-        return job.Schedule(ParticleCount, 64, depend);
+        return job.Schedule(ParticleCount, threadCount, depend);
     }
 
+    /// <summary>
+    /// 更新位置
+    /// </summary>
+    /// <param name="dt"></param>
+    /// <param name="depend"></param>
+    /// <returns></returns>
     private JobHandle DoUpdatePosition(float dt, JobHandle depend)
     {
         var job = new UpdatePosition()
         {
             position = _positions,
-            velocities = _velocitys,
+            velocities = _velocities,
 
             dt = dt,
         };
 
-        return job.Schedule(ParticleCount, 64, depend);
+        return job.Schedule(ParticleCount, threadCount, depend);
     }
 
     /// <summary>
@@ -230,7 +237,7 @@ public class SPHSimulate
         var job = new BoundJob()
         {
             positions = _positions,
-            velocitys = _velocitys,
+            velocitys = _velocities,
             particleRadius = _radius,
 
             boundCenter = _boundCenter,
@@ -238,9 +245,11 @@ public class SPHSimulate
             CollisionDamping = _collisionDamping,
         };
 
-        return job.Schedule(ParticleCount, 64, depend);
+        return job.Schedule(ParticleCount, threadCount, depend);
     }
     #endregion
+
+    #region  OuputInterface
 
     /// <summary>
     /// 获取所有粒子的位置参数，以供其他模块提供渲染
@@ -250,4 +259,25 @@ public class SPHSimulate
     {
         return Array.ConvertAll(_positions.ToArray(), p => (Vector3)p);
     }
+
+    /// <summary>
+    /// 获取所有的速度参数
+    /// </summary>
+    /// <returns></returns>
+    public Vector3[] GetVelocities()
+    {
+        return Array.ConvertAll(_velocities.ToArray(), p => (Vector3)p);
+    }
+
+    /// <summary>
+    /// 获取所有粒子的密度信息
+    /// </summary>
+    /// <returns></returns>
+    public Vector2[] GetDensities()
+    {
+        return Array.ConvertAll(_densities.ToArray(), p => (Vector2)p);
+    }
+
+    #endregion
+
 }

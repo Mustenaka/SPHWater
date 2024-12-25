@@ -275,6 +275,7 @@ MonoBehaviour:
   gravity: {x: 0, y: -9.81, z: 0}
   positions: []
   velocities: []
+  densities: []
   particleRadius: 0.1
   targetDensity: 630
   pressureMultiplier: 260

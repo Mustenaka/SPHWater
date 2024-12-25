@@ -13,7 +13,8 @@ public class SPHSolver : MonoBehaviour
     public int particleCount;       // 粒子数量
     public Vector3 gravity;         // 重力
     public Vector3[] positions;     // 位置
-    public Vector3[] velocities;     // 速度
+    public Vector3[] velocities;    // 速度
+    public Vector2[] densities;     // 密度
 
     public float particleRadius;        // 粒子半径
     public float targetDensity;         // 目标密度
@@ -46,6 +47,7 @@ public class SPHSolver : MonoBehaviour
 
         positions = new Vector3[particleCount];
         velocities = new Vector3[particleCount];
+        densities = new Vector2[particleCount];
 
         // Fill data
         var particlesPerLayer = Mathf.CeilToInt(Mathf.Pow(particleCount, 1f / 3f));
@@ -91,8 +93,7 @@ public class SPHSolver : MonoBehaviour
                 simulate.Simulate(dt);
             }
 
-            // 获取粒子位置 | 将来可用一个渲染模块承载
-            positions = simulate.GetPositions();
+            ReceiveData();
         }
 
         accTime %= dt;
@@ -119,6 +120,17 @@ public class SPHSolver : MonoBehaviour
         referenceData.NearPressureMultiplier = nearPressureMultiplier;
         referenceData.ViscosityStrength = viscosityStrength;
         referenceData.SmoothingRadius = smoothingRadius;
+    }
+
+    /// <summary>
+    /// 接受Simulate除传来的同步数据
+    /// </summary>
+    private void ReceiveData()
+    {
+        // 获取粒子位置 | 将来可用一个渲染模块承载
+        positions = simulate.GetPositions();
+        velocities = simulate.GetVelocities();
+        densities = simulate.GetDensities();
     }
 
     private void OnDrawGizmos()

@@ -1,8 +1,12 @@
-﻿using SPHWater;
+﻿using System;
+using System.Security.Cryptography;
+using SPHWater;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Assets.Scripts.Jobs
 {
@@ -44,7 +48,17 @@ namespace Assets.Scripts.Jobs
                 nearDensity += PMath.SpikyKernelPow3(dst, smoothingRadius.Value);
             }
 
+            //if (density > 0)
+            //{
+            //    Debug.Log($"Index:{index}, density:{density}, nearDensity:{nearDensity}");
+            //}
+
             densities[index] = new float2(density, nearDensity);
+
+            //var tmp = densities[index];
+            //tmp[0] = density;
+            //tmp[1] = nearDensity;
+            //densities[index] = tmp;
         }
     }
 }
